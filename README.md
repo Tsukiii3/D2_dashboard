@@ -20,6 +20,9 @@ Os dados são carregados diretamente de planilhas online (Google Sheets) e atual
 - Plotly
 - Google Sheets
 
+## Link do Site
+https://d2dashboard-5ddkqjf7unafrzzqnub566.streamlit.app
+
 ## Como Executar Localmente
 
 ```bash
