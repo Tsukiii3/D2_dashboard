@@ -4,7 +4,7 @@ Este projeto é um dashboard interativo desenvolvido em Python para visualizar e
 
 Os dados são carregados diretamente de planilhas online (Google Sheets) e atualizados em tempo real.
 
-##Funcionalidades
+## Funcionalidades
 
 -  Visualização de dados em gráficos interativos
 -  Filtros por modo, raid e masmorra
