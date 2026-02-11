@@ -39,9 +39,9 @@ total_horas = df_modos['Horas'].sum()
 total_quantidade = df_modos['Quantidade_feita'].sum()
 
 col1, col2, col3 = st.columns(3)
-col1.metric("Total Kills", f"{total_kills}")
-col2.metric("Total Horas", f"{total_horas:.2f}")
-col3.metric("Quantidade Feita", f"{total_quantidade}")
+col1.metric("Total Kills da Conta", f"{total_kills}")
+col2.metric("Total de Horas Jogadas", f"{total_horas:.2f}")
+col3.metric("Total de atividades feitas", f"{total_quantidade}")
 
 st.header("DESTINY STATUS")
 
