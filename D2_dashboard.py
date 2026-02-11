@@ -168,17 +168,18 @@ fig.update_traces(textposition='outside')
 st.plotly_chart(fig, use_container_width=True)
 
 st.subheader("Ranking de Raids (Conclusões)")
-inverter_ordem = st.sidebar.checkbox(
-    "Mostrar do menor para o maior"
+ordem = st.sidebar.radio(
+    "📊 Ordenar Ranking",
+    ["Maior → Menor", "Menor → Maior"]
 )
 df_raids["Conclusões"] = pd.to_numeric(
     df_raids["Conclusões"],
     errors="coerce"
 ).fillna(0)
-if inverter_ordem:
-    asc = True
-else:
+if ordem == "Maior → Menor":
     asc = False
+else:
+    asc = True
 ranking_raids = (
     df_raids
     .sort_values(by="Conclusões", ascending=asc)
@@ -186,6 +187,8 @@ ranking_raids = (
 )
 ranking_raids = ranking_raids[["Raid_Nome", "Conclusões"]]
 st.table(ranking_raids)
+ranking_raids.insert(0, "Posição", range(1, len(ranking_raids) + 1))
+
 
 st.header("MASMORRAS")
 
