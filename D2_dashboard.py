@@ -105,7 +105,7 @@ st.divider()
 st.header("DESTINY STATUS")
 st.markdown("### Filtros")
 
-f1, f2 = st.columns(2)
+f1, f2, f3 = st.columns(3)
 
 with f1:
     modo_selecionado = st.selectbox(
@@ -126,6 +126,12 @@ with f2:
             'Pontuação'
         ],
         key="metrica_modo"
+    )
+with f3:
+    ordem_modo = st.radio(
+        "Ordenação",
+        ["Maior → Menor", "Menor → Maior"],
+        key="ordem-modo"
     )
 if modo_selecionado == 'Todos':
     df_fill = df_modos.copy()
