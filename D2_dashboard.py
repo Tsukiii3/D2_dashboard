@@ -34,6 +34,15 @@ if st.sidebar.button("Atualizar dados"):
     st.cache_data.clear()
     st.rerun()
 
+total_kills = df_modos['Total_Kills'].sum()
+total_horas = df_modos['Horas'].sum()
+total_quantidade = df_modos['Quantidade_feita'].sum()
+
+col1, col2, col3 = st.columns(3)
+col1.metric("Total Kills", f"{total_kills}")
+col2.metric("Total Horas", f"{total_horas:.2f}")
+col3.metric("Quantidade Feita", f"{total_quantidade}")
+
 st.header("DESTINY STATUS")
 
 modos = ['Todos'] + sorted(df_modos['Modo'].dropna().unique())
@@ -50,7 +59,6 @@ metricas = [
 ]
 
 metrica = st.sidebar.selectbox("Métrica", metricas)
-
 if modo_selecionado == 'Todos':
     df_fill = df_modos.copy()
 else:
@@ -65,6 +73,8 @@ fig = px.bar(
 fig.update_traces(textposition='outside')
 st.plotly_chart(fig, use_container_width=True)
 
+
+#Painéis de Raid
 st.header("RAIDS")
 
 raids = ['Todos'] + sorted(df_raids['Raid_Nome'].dropna().unique())
@@ -106,6 +116,8 @@ fig.update_traces(textposition='outside')
 
 st.plotly_chart(fig, use_container_width=True)
 
+
+#Painéis de Masmorras
 st.header("MASMORRAS")
 
 def tempo_para_segundos(tempo):
@@ -182,12 +194,13 @@ df_tempo = (
 df_tempo['Porcentagem'] = (
     df_tempo['Horas'] / df_tempo['Horas'].sum()
 ) * 100
+
 fig_pizza = px.pie(
     df_tempo,
     names='Modo',
     values='Horas',
     title='Porcentagem de Tempo por Atividade',
-    hole=0.4  # deixa estilo donut (bonito)
+    hole=0.4  # deixa estilo donut
 )
 fig_pizza.update_traces(
     textinfo='percent+label'
