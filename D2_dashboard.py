@@ -8,7 +8,7 @@ st.set_page_config(
     page_icon='🎮',
     layout='wide'
 )
-modo_tema = st.sidebar.radio("🌗 Tema", ["Dark", "Light"])
+modo_tema = st.sidebar.radio("Tema", ["Dark", "Light"])
 
 
 if modo_tema == "Light":
@@ -131,7 +131,7 @@ fig = px.bar(
 fig.update_traces(textposition='outside')
 st.plotly_chart(fig, use_container_width=True)
 
-st.header("⚔️ RAIDS")
+st.header("RAIDS")
 
 raids = ['Todos'] + sorted(df_raids['Raid_Nome'].dropna().unique())
 raid_selecionada = st.sidebar.selectbox("Raid", raids)
@@ -167,32 +167,26 @@ if metrica_raid in ['Conclusão_Mais_Rápida', 'Média_Tempo']:
 fig.update_traces(textposition='outside')
 st.plotly_chart(fig, use_container_width=True)
 
-st.subheader("Ranking - Top 5 Conclusões")
-ordem_ranking = st.sidebar.radio(
-    "📊 Ordem do Ranking",
-    ["Maior → Menor", "Menor → Maior"]
+st.subheader("Ranking de Raids (Conclusões)")
+inverter_ordem = st.sidebar.checkbox(
+    "Mostrar do menor para o maior"
 )
-# Garante que é número
 df_raids["Conclusões"] = pd.to_numeric(
     df_raids["Conclusões"],
     errors="coerce"
 ).fillna(0)
-
-if ordem_ranking == "Maior → Menor":
-    asc = False
-else:
+if inverter_ordem:
     asc = True
-
+else:
+    asc = False
 ranking_raids = (
     df_raids
     .sort_values(by="Conclusões", ascending=asc)
     .reset_index(drop=True)
-    .head(5)
 )
-st.dataframe(
-    ranking_raids[["Raid_Nome", "Conclusões"]],
-    use_container_width=True
-)
+ranking_raids = ranking_raids[["Raid_Nome", "Conclusões"]]
+st.table(ranking_raids)
+
 st.header("MASMORRAS")
 
 def tempo_para_segundos(tempo):
