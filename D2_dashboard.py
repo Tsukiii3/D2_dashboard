@@ -168,15 +168,25 @@ fig.update_traces(textposition='outside')
 st.plotly_chart(fig, use_container_width=True)
 
 st.subheader("Ranking - Top 5 Conclusões")
-
-# Garante que Conclusões é número
-df_raids['Conclusões'] = pd.to_numeric(
-    df_raids['Conclusões'],
-    errors='coerce'
+ordem_ranking = st.sidebar.radio(
+    "📊 Ordem do Ranking",
+    ["Maior → Menor", "Menor → Maior"]
+)
+# Garante que é número
+df_raids["Conclusões"] = pd.to_numeric(
+    df_raids["Conclusões"],
+    errors="coerce"
 ).fillna(0)
+
+if ordem_ranking == "Maior → Menor":
+    asc = False
+else:
+    asc = True
+
 ranking_raids = (
     df_raids
-    .sort_values(by="Conclusões", ascending=False)
+    .sort_values(by="Conclusões", ascending=asc)
+    .reset_index(drop=True)
     .head(5)
 )
 st.dataframe(
