@@ -10,15 +10,34 @@ st.set_page_config(
 )
 modo_tema = st.sidebar.radio("🌗 Tema", ["Dark", "Light"])
 
+
 if modo_tema == "Light":
+
     st.markdown("""
         <style>
         .stApp {
-            background-color: white;
-            color: black;
+            background-color: #f5f7fa;
+            color: #111111;
+        }
+        section[data-testid="stSidebar"] {
+            background-color: #ffffff;
+        }
+        h1, h2, h3, h4, h5, h6, p, span, label {
+            color: #111111 !important;
+        }
+        input, textarea, select {
+            background-color: #ffffff !important;
+            color: black !important;
+        }
+        div[data-testid="metric-container"] {
+            background-color: #ffffff;
+            border-radius: 10px;
+            padding: 10px;
+            box-shadow: 0px 0px 5px rgba(0,0,0,0.1);
         }
         </style>
     """, unsafe_allow_html=True)
+
 SHEET_ID = "1pkDTOC38D5rFlBbCBAAAOC3qEMVa6y-8hsy_KH_A2x0"
 
 GID_MODOS = "1922820478"
@@ -64,23 +83,23 @@ c1, c2, c3 = st.columns(3)
 
 with c1:
     st.metric(
-        "🏆 Mais Tempo",
+        "Mais Tempo",
         melhor_modo["Modo"],
         f"{melhor_modo['Horas']:.1f}h"
     )
 with c2:
     st.metric(
-        "💥 Mais Kills",
+        "Mais Kills",
         mais_kills["Modo"],
         f"{mais_kills['Total_Kills']}"
     )
 with c3:
     st.metric(
-        "🎯 Mais Jogado",
+        "Mais Jogado",
         mais_partidas["Modo"],
         f"{mais_partidas['Quantidade_feita']}x"
     )
-st.header("📊 DESTINY STATUS")
+st.header("DESTINY STATUS")
 
 modos = ['Todos'] + sorted(df_modos['Modo'].dropna().unique())
 modo_selecionado = st.sidebar.selectbox("Modo", modos)
@@ -148,8 +167,13 @@ if metrica_raid in ['Conclusão_Mais_Rápida', 'Média_Tempo']:
 fig.update_traces(textposition='outside')
 st.plotly_chart(fig, use_container_width=True)
 
-st.subheader("🏅 Ranking - Top 5 Conclusões")
+st.subheader("Ranking - Top 5 Conclusões")
 
+# Garante que Conclusões é número
+df_raids['Conclusões'] = pd.to_numeric(
+    df_raids['Conclusões'],
+    errors='coerce'
+).fillna(0)
 ranking_raids = (
     df_raids
     .sort_values(by="Conclusões", ascending=False)
@@ -159,7 +183,7 @@ st.dataframe(
     ranking_raids[["Raid_Nome", "Conclusões"]],
     use_container_width=True
 )
-st.header("🗝️ MASMORRAS")
+st.header("MASMORRAS")
 
 def tempo_para_segundos(tempo):
 
