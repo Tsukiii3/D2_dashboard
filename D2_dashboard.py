@@ -128,25 +128,49 @@ with f2:
         key="metrica_modo"
     )
 with f3:
-    ordem_modo = st.radio(
+    ordem_status = st.radio(
         "Ordenação",
         ["Maior → Menor", "Menor → Maior"],
-        key="ordem-modo"
+        key="ordem_status"
     )
 if modo_selecionado == 'Todos':
     df_fill = df_modos.copy()
 else:
     df_fill = df_modos[df_modos['Modo'] == modo_selecionado]
+asc = ordem_status == "Menor → Maior"
 
-fig = px.bar(
-    df_fill,
-    x='Modo',
-    y=metrica,
-    text=metrica,
-    title=f'{metrica} por Modo'
+df_fill = df_fill.sort_values(
+    by=metrica,
+    ascending=asc
 )
-fig.update_traces(textposition='outside')
-st.plotly_chart(fig, use_container_width=True)
+g1, g2 = st.columns([2, 1])
+
+with g1:
+    fig_bar = px.bar(
+        df_fill,
+        x='Modo',
+        y=metrica,
+        text=metrica,
+        title=f'{metrica} por Modo'
+    )
+    fig_bar.update_traces(textposition='outside')
+    fig_bar.update_layout(
+        xaxis_title="Modo",
+        yaxis_title=metrica
+    )
+    st.plotly_chart(fig_bar, use_container_width=True)
+with g2:
+    fig_pie = px.pie(
+        df_fill,
+        names='Modo',
+        values=metrica,
+        title='Distribuição (%)',
+        hole=0.4
+    )
+    fig_pie.update_traces(
+        textinfo='percent+label'
+    )
+    st.plotly_chart(fig_pie, use_container_width=True)
 
 st.header("RAIDS")
 st.markdown("### Filtros Raid")
