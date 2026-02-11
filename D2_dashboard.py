@@ -8,6 +8,17 @@ st.set_page_config(
     page_icon='🎮',
     layout='wide'
 )
+modo_tema = st.sidebar.radio("🌗 Tema", ["Dark", "Light"])
+
+if modo_tema == "Light":
+    st.markdown("""
+        <style>
+        .stApp {
+            background-color: white;
+            color: black;
+        }
+        </style>
+    """, unsafe_allow_html=True)
 SHEET_ID = "1pkDTOC38D5rFlBbCBAAAOC3qEMVa6y-8hsy_KH_A2x0"
 
 GID_MODOS = "1922820478"
@@ -25,11 +36,10 @@ def carregar_dados():
     df_masmorras = pd.read_csv(URL_MASMORRAS)
 
     return df_modos, df_raids, df_masmorras
-
 df_modos, df_raids, df_masmorras = carregar_dados()
 
-
 st.sidebar.title("DESTINY DASHBOARD")
+
 if st.sidebar.button("Atualizar dados"):
     st.cache_data.clear()
     st.rerun()
@@ -39,11 +49,38 @@ total_horas = df_modos['Horas'].sum()
 total_quantidade = df_modos['Quantidade_feita'].sum()
 
 col1, col2, col3 = st.columns(3)
-col1.metric("Total Kills da Conta", f"{total_kills}")
-col2.metric("Total de Horas Jogadas", f"{total_horas:.2f}")
-col3.metric("Total de atividades feitas", f"{total_quantidade}")
 
-st.header("DESTINY STATUS")
+col1.metric(" Total Kills", f"{total_kills}")
+col2.metric("⏱Horas Jogadas", f"{total_horas:.2f}")
+col3.metric("Atividades", f"{total_quantidade}")
+
+st.subheader("Destaques Gerais")
+
+melhor_modo = df_modos.loc[df_modos['Horas'].idxmax()]
+mais_kills = df_modos.loc[df_modos['Total_Kills'].idxmax()]
+mais_partidas = df_modos.loc[df_modos['Quantidade_feita'].idxmax()]
+
+c1, c2, c3 = st.columns(3)
+
+with c1:
+    st.metric(
+        "🏆 Mais Tempo",
+        melhor_modo["Modo"],
+        f"{melhor_modo['Horas']:.1f}h"
+    )
+with c2:
+    st.metric(
+        "💥 Mais Kills",
+        mais_kills["Modo"],
+        f"{mais_kills['Total_Kills']}"
+    )
+with c3:
+    st.metric(
+        "🎯 Mais Jogado",
+        mais_partidas["Modo"],
+        f"{mais_partidas['Quantidade_feita']}x"
+    )
+st.header("📊 DESTINY STATUS")
 
 modos = ['Todos'] + sorted(df_modos['Modo'].dropna().unique())
 modo_selecionado = st.sidebar.selectbox("Modo", modos)
@@ -59,10 +96,12 @@ metricas = [
 ]
 
 metrica = st.sidebar.selectbox("Métrica", metricas)
+
 if modo_selecionado == 'Todos':
     df_fill = df_modos.copy()
 else:
     df_fill = df_modos[df_modos['Modo'] == modo_selecionado]
+
 fig = px.bar(
     df_fill,
     x='Modo',
@@ -73,12 +112,9 @@ fig = px.bar(
 fig.update_traces(textposition='outside')
 st.plotly_chart(fig, use_container_width=True)
 
-
-#Painéis de Raid
-st.header("RAIDS")
+st.header("⚔️ RAIDS")
 
 raids = ['Todos'] + sorted(df_raids['Raid_Nome'].dropna().unique())
-
 raid_selecionada = st.sidebar.selectbox("Raid", raids)
 
 metricas_raids = [
@@ -87,14 +123,12 @@ metricas_raids = [
     'Conclusão_Mais_Rápida',
     'Média_Tempo'
 ]
-
 metrica_raid = st.sidebar.selectbox("Métrica Raid", metricas_raids)
 
 if raid_selecionada == 'Todos':
     df_fill = df_raids.copy()
 else:
     df_fill = df_raids[df_raids['Raid_Nome'] == raid_selecionada]
-
 
 if metrica_raid in ['Conclusão_Mais_Rápida', 'Média_Tempo']:
     df_fill = df_fill.sort_values(by=metrica_raid)
@@ -108,17 +142,24 @@ fig = px.bar(
     text=metrica_raid,
     title=f'{metrica_raid} por Raid'
 )
-
 if metrica_raid in ['Conclusão_Mais_Rápida', 'Média_Tempo']:
     fig.update_yaxes(autorange="reversed")
 
 fig.update_traces(textposition='outside')
-
 st.plotly_chart(fig, use_container_width=True)
 
+st.subheader("🏅 Ranking - Top 5 Conclusões")
 
-#Painéis de Masmorras
-st.header("MASMORRAS")
+ranking_raids = (
+    df_raids
+    .sort_values(by="Conclusões", ascending=False)
+    .head(5)
+)
+st.dataframe(
+    ranking_raids[["Raid_Nome", "Conclusões"]],
+    use_container_width=True
+)
+st.header("🗝️ MASMORRAS")
 
 def tempo_para_segundos(tempo):
 
@@ -158,7 +199,6 @@ metrica_masmorras = st.sidebar.selectbox(
     "Métrica Masmorra",
     metricas_masmorras
 )
-
 if masmorra_selecionada == 'Todos':
     df_fill = df_masmorras.copy()
 else:
@@ -181,16 +221,17 @@ if metrica_masmorras in ['Conclusão_Mais_Rápida', 'Média_Tempo']:
     fig.update_yaxes(autorange="reversed")
 
 fig.update_traces(textposition='outside')
+
 st.plotly_chart(fig, use_container_width=True)
 
-
-st.header("Distribuição do Tempo por Atividade")
+st.header(" Distribuição do Tempo por Atividade")
 
 df_tempo = (
     df_modos
     .groupby('Modo', as_index=False)['Horas']
     .sum()
 )
+
 df_tempo['Porcentagem'] = (
     df_tempo['Horas'] / df_tempo['Horas'].sum()
 ) * 100
@@ -200,9 +241,11 @@ fig_pizza = px.pie(
     names='Modo',
     values='Horas',
     title='Porcentagem de Tempo por Atividade',
-    hole=0.4  # deixa estilo donut
+    hole=0.4
 )
+
 fig_pizza.update_traces(
     textinfo='percent+label'
 )
+
 st.plotly_chart(fig_pizza, use_container_width=True)
