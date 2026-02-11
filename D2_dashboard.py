@@ -59,7 +59,7 @@ df_modos, df_raids, df_masmorras = carregar_dados()
 
 st.header("DESTINY STATUS")
 
-st.markdown("### Filtros")
+st.markdown("### 🎯 Filtros")
 
 f1, f2 = st.columns(2)
 
@@ -171,16 +171,15 @@ st.dataframe(
     use_container_width=True,
     hide_index=True
 )
-
 st.header("MASMORRAS")
 st.markdown("### Filtros Masmorra")
 
-m1, m2 = st.columns(2)
-
+m1, m2, m3 = st.columns(3)
 with m1:
     masmorra_selecionada = st.selectbox(
         "Masmorra",
-        ['Todos'] + sorted(df_masmorras['Dungeon_nome'].dropna().unique())
+        ['Todos'] + sorted(df_masmorras['Dungeon_nome'].dropna().unique()),
+        key="masmorra_select"
     )
 with m2:
     metrica_masmorras = st.selectbox(
@@ -190,7 +189,14 @@ with m2:
             'Sherpas',
             'Conclusão_Mais_Rápida',
             'Média_Tempo'
-        ]
+        ],
+        key="metrica_masmorra"
+    )
+with m3:
+    ordem_masmorra = st.radio(
+        "Ordenação",
+        ["Maior → Menor", "Menor → Maior"],
+        key="ordem_masmorra"
     )
 if masmorra_selecionada == 'Todos':
     df_fill = df_masmorras.copy()
@@ -198,20 +204,48 @@ else:
     df_fill = df_masmorras[
         df_masmorras['Dungeon_nome'] == masmorra_selecionada
     ]
-if metrica_masmorras in ['Conclusão_Mais_Rápida', 'Média_Tempo']:
-    df_fill = df_fill.sort_values(by=metrica_masmorras + '_seg')
+if ordem_masmorra == "Maior → Menor":
+    asc = False
 else:
-    df_fill = df_fill.sort_values(by=metrica_masmorras, ascending=False)
-
-fig = px.bar(
-    df_fill,
-    x='Dungeon_nome',
-    y=metrica_masmorras,
-    text=metrica_masmorras,
-    title=f'{metrica_masmorras} por Masmorra'
+    asc = True
+is_tempo = metrica_masmorras in [
+    'Conclusão_Mais_Rápida',
+    'Média_Tempo'
+]
+if is_tempo:
+    coluna_seg = metrica_masmorras + '_seg'
+    df_fill = df_fill.sort_values(
+        by=coluna_seg,
+        ascending=asc
+    )
+    fig = px.bar(
+        df_fill,
+        x='Dungeon_nome',
+        y=coluna_seg,
+        text=metrica_masmorras,
+        title=f'{metrica_masmorras} por Masmorra (em segundos)'
+    )
+    fig.update_yaxes(
+        title="Tempo (segundos)"
+    )
+else:
+    df_fill = df_fill.sort_values(
+        by=metrica_masmorras,
+        ascending=asc
+    )
+    fig = px.bar(
+        df_fill,
+        x='Dungeon_nome',
+        y=metrica_masmorras,
+        text=metrica_masmorras,
+        title=f'{metrica_masmorras} por Masmorra'
+    )
+fig.update_traces(
+    textposition='outside'
 )
-if metrica_masmorras in ['Conclusão_Mais_Rápida', 'Média_Tempo']:
-    fig.update_yaxes(autorange="reversed")
-
-fig.update_traces(textposition='outside')
+fig.update_layout(
+    xaxis_title="Masmorra",
+    uniformtext_minsize=8,
+    uniformtext_mode='hide'
+)
 st.plotly_chart(fig, use_container_width=True)
