@@ -3,13 +3,19 @@ import streamlit as st
 import plotly.express as px
 import re
 
+
+# ================= CONFIG =================
+
 st.set_page_config(
     page_title='DATA DESTINY ACTIVITIES',
     page_icon='🎮',
     layout='wide'
 )
-modo_tema = st.sidebar.radio("Tema", ["Dark", "Light"])
 
+
+# ================= TEMA =================
+
+modo_tema = st.sidebar.radio("Tema", ["Dark", "Light"])
 
 if modo_tema == "Light":
 
@@ -31,12 +37,15 @@ if modo_tema == "Light":
         }
         div[data-testid="metric-container"] {
             background-color: #ffffff;
-            border-radius: 10px;
-            padding: 10px;
-            box-shadow: 0px 0px 5px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            padding: 12px;
+            box-shadow: 0px 0px 6px rgba(0,0,0,0.1);
         }
         </style>
     """, unsafe_allow_html=True)
+
+
+# ================= DADOS =================
 
 SHEET_ID = "1pkDTOC38D5rFlBbCBAAAOC3qEMVa6y-8hsy_KH_A2x0"
 
@@ -48,6 +57,7 @@ URL_MODOS = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=cs
 URL_RAIDS = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid={GID_RAIDS}"
 URL_MASMORRAS = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid={GID_MASMORRAS}"
 
+
 @st.cache_data(ttl=300)
 def carregar_dados():
     df_modos = pd.read_csv(URL_MODOS)
@@ -57,16 +67,51 @@ def carregar_dados():
     return df_modos, df_raids, df_masmorras
 df_modos, df_raids, df_masmorras = carregar_dados()
 
-st.header("DESTINY STATUS")
+def tempo_para_segundos(tempo):
+    if pd.isna(tempo):
+        return 0
+    tempo = str(tempo).lower()
 
-st.markdown("### 🎯 Filtros")
+    h = re.search(r'(\d+)h', tempo)
+    m = re.search(r'(\d+)m', tempo)
+    s = re.search(r'(\d+)s', tempo)
+
+    horas = int(h.group(1)) if h else 0
+    minutos = int(m.group(1)) if m else 0
+    segundos = int(s.group(1)) if s else 0
+
+    return horas * 3600 + minutos * 60 + segundos
+
+for df in [df_raids, df_masmorras]:
+    df['Conclusão_Mais_Rápida_seg'] = df['Conclusão_Mais_Rápida'].apply(tempo_para_segundos)
+    df['Média_Tempo_seg'] = df['Média_Tempo'].apply(tempo_para_segundos)
+
+st.markdown("""
+<h1 style="text-align:center;">TSUKII#5231</h1>
+""", unsafe_allow_html=True)
+
+total_horas = df_modos['Horas'].sum()
+total_kills = df_modos['Total_Kills'].sum()
+total_atividades = df_modos['Quantidade_feita'].sum()
+
+t1, t2, t3 = st.columns(3)
+
+t1.metric("Horas Jogadas", f"{total_horas:.1f}")
+t2.metric("Total Kills", f"{int(total_kills)}")
+t3.metric("Atividades", f"{int(total_atividades)}")
+
+st.divider()
+
+st.header("DESTINY STATUS")
+st.markdown("### Filtros")
 
 f1, f2 = st.columns(2)
 
 with f1:
     modo_selecionado = st.selectbox(
         "Modo",
-        ['Todos'] + sorted(df_modos['Modo'].dropna().unique())
+        ['Todos'] + sorted(df_modos['Modo'].dropna().unique()),
+        key="modo_select"
     )
 with f2:
     metrica = st.selectbox(
@@ -79,7 +124,8 @@ with f2:
             'Média_Mortes',
             'Total_Kills',
             'Pontuação'
-        ]
+        ],
+        key="metrica_modo"
     )
 if modo_selecionado == 'Todos':
     df_fill = df_modos.copy()
@@ -97,14 +143,15 @@ fig.update_traces(textposition='outside')
 st.plotly_chart(fig, use_container_width=True)
 
 st.header("RAIDS")
-
 st.markdown("### Filtros Raid")
 
 r1, r2, r3 = st.columns(3)
+
 with r1:
     raid_selecionada = st.selectbox(
         "Raid",
-        ['Todos'] + sorted(df_raids['Raid_Nome'].dropna().unique())
+        ['Todos'] + sorted(df_raids['Raid_Nome'].dropna().unique()),
+        key="raid_select"
     )
 with r2:
     metrica_raid = st.selectbox(
@@ -114,67 +161,51 @@ with r2:
             'Sherpas',
             'Conclusão_Mais_Rápida',
             'Média_Tempo'
-        ]
+        ],
+        key="metrica_raid"
     )
 with r3:
-    ordem = st.selectbox(
-        "Ordenar Ranking",
-        ["Maior → Menor", "Menor → Maior"]
+    ordem_raid = st.radio(
+        "Ordenação",
+        ["Maior → Menor", "Menor → Maior"],
+        key="ordem_raid"
     )
 if raid_selecionada == 'Todos':
     df_fill = df_raids.copy()
 else:
     df_fill = df_raids[df_raids['Raid_Nome'] == raid_selecionada]
+asc = ordem_raid == "Menor → Maior"
+is_tempo = metrica_raid in ['Conclusão_Mais_Rápida', 'Média_Tempo']
 
-if metrica_raid in ['Conclusão_Mais_Rápida', 'Média_Tempo']:
-    df_fill = df_fill.sort_values(by=metrica_raid)
+if is_tempo:
+    coluna = metrica_raid + '_seg'
+    df_fill = df_fill.sort_values(coluna, ascending=asc)
+
+    fig = px.bar(
+        df_fill,
+        x='Raid_Nome',
+        y=coluna,
+        text=metrica_raid,
+        title=f'{metrica_raid} por Raid (segundos)'
+    )
+    fig.update_yaxes(title="Tempo (s)")
 else:
-    df_fill = df_fill.sort_values(by=metrica_raid, ascending=False)
-
-fig = px.bar(
-    df_fill,
-    x='Raid_Nome',
-    y=metrica_raid,
-    text=metrica_raid,
-    title=f'{metrica_raid} por Raid'
-)
-if metrica_raid in ['Conclusão_Mais_Rápida', 'Média_Tempo']:
-    fig.update_yaxes(autorange="reversed")
-
+    df_fill = df_fill.sort_values(metrica_raid, ascending=asc)
+    fig = px.bar(
+        df_fill,
+        x='Raid_Nome',
+        y=metrica_raid,
+        text=metrica_raid,
+        title=f'{metrica_raid} por Raid'
+    )
 fig.update_traces(textposition='outside')
 st.plotly_chart(fig, use_container_width=True)
 
-st.subheader("Ranking de Raids (Conclusões)")
-df_raids["Conclusões"] = pd.to_numeric(
-    df_raids["Conclusões"],
-    errors="coerce"
-).fillna(0)
-if ordem == "Maior → Menor":
-    asc = False
-else:
-    asc = True
-ranking_raids = (
-    df_raids
-    .sort_values(by="Conclusões", ascending=asc)
-    .reset_index(drop=True)
-)
-ranking_raids.insert(
-    0,
-    "Posição",
-    range(1, len(ranking_raids) + 1)
-)
-ranking_raids = ranking_raids[
-    ["Posição", "Raid_Nome", "Conclusões"]
-]
-st.dataframe(
-    ranking_raids,
-    use_container_width=True,
-    hide_index=True
-)
 st.header("MASMORRAS")
 st.markdown("### Filtros Masmorra")
 
 m1, m2, m3 = st.columns(3)
+
 with m1:
     masmorra_selecionada = st.selectbox(
         "Masmorra",
@@ -204,35 +235,22 @@ else:
     df_fill = df_masmorras[
         df_masmorras['Dungeon_nome'] == masmorra_selecionada
     ]
-if ordem_masmorra == "Maior → Menor":
-    asc = False
-else:
-    asc = True
-is_tempo = metrica_masmorras in [
-    'Conclusão_Mais_Rápida',
-    'Média_Tempo'
-]
+asc = ordem_masmorra == "Menor → Maior"
+is_tempo = metrica_masmorras in ['Conclusão_Mais_Rápida', 'Média_Tempo']
+
 if is_tempo:
-    coluna_seg = metrica_masmorras + '_seg'
-    df_fill = df_fill.sort_values(
-        by=coluna_seg,
-        ascending=asc
-    )
+    coluna = metrica_masmorras + '_seg'
+    df_fill = df_fill.sort_values(coluna, ascending=asc)
     fig = px.bar(
         df_fill,
         x='Dungeon_nome',
-        y=coluna_seg,
+        y=coluna,
         text=metrica_masmorras,
-        title=f'{metrica_masmorras} por Masmorra (em segundos)'
+        title=f'{metrica_masmorras} por Masmorra (segundos)'
     )
-    fig.update_yaxes(
-        title="Tempo (segundos)"
-    )
+    fig.update_yaxes(title="Tempo (s)")
 else:
-    df_fill = df_fill.sort_values(
-        by=metrica_masmorras,
-        ascending=asc
-    )
+    df_fill = df_fill.sort_values(metrica_masmorras, ascending=asc)
     fig = px.bar(
         df_fill,
         x='Dungeon_nome',
@@ -240,12 +258,5 @@ else:
         text=metrica_masmorras,
         title=f'{metrica_masmorras} por Masmorra'
     )
-fig.update_traces(
-    textposition='outside'
-)
-fig.update_layout(
-    xaxis_title="Masmorra",
-    uniformtext_minsize=8,
-    uniformtext_mode='hide'
-)
+fig.update_traces(textposition='outside')
 st.plotly_chart(fig, use_container_width=True)
