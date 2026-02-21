@@ -2,19 +2,16 @@ import pandas as pd
 import streamlit as st
 import plotly.express as px
 import re
-
+import gspread
+from google.oauth2.service_account import Credentials
 
 # ================= CONFIG =================
-
 st.set_page_config(
     page_title='DATA DESTINY ACTIVITIES',
     page_icon='🎮',
     layout='wide'
 )
-
-
 # ================= TEMA =================
-
 modo_tema = st.sidebar.radio("Tema", ["Dark", "Light"])
 
 if modo_tema == "Light":
@@ -44,29 +41,41 @@ if modo_tema == "Light":
         </style>
     """, unsafe_allow_html=True)
 
-
 # ================= DADOS =================
-
-SHEET_ID = "1pkDTOC38D5rFlBbCBAAAOC3qEMVa6y-8hsy_KH_A2x0"
-
-GID_MODOS = "1922820478"
-GID_RAIDS = "1252752604"
-GID_MASMORRAS = "1143212602"
-
-URL_MODOS = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid={GID_MODOS}"
-URL_RAIDS = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid={GID_RAIDS}"
-URL_MASMORRAS = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid={GID_MASMORRAS}"
-
 
 @st.cache_data(ttl=300)
 def carregar_dados():
-    df_modos = pd.read_csv(URL_MODOS)
-    df_raids = pd.read_csv(URL_RAIDS)
-    df_masmorras = pd.read_csv(URL_MASMORRAS)
+
+    scope = [
+        "https://www.googleapis.com/auth/spreadsheets",
+        "https://www.googleapis.com/auth/drive"
+    ]
+
+    creds = Credentials.from_service_account_info(
+        st.secrets["gcp_service_account"],
+        scopes=scope,
+    )
+
+    client = gspread.authorize(creds)
+
+    spreadsheet = client.open_by_key(
+        "1pkDTOC38D5rFlBbCBAAAOC3qEMVa6y-8hsy_KH_A2x0"
+    )
+
+    df_modos = pd.DataFrame(
+        spreadsheet.get_worksheet_by_id(1922820478).get_all_records()
+    )
+
+    df_raids = pd.DataFrame(
+        spreadsheet.get_worksheet_by_id(1252752604).get_all_records()
+    )
+
+    df_masmorras = pd.DataFrame(
+        spreadsheet.get_worksheet_by_id(1143212602).get_all_records()
+    )
 
     return df_modos, df_raids, df_masmorras
 df_modos, df_raids, df_masmorras = carregar_dados()
-
 def tempo_para_segundos(tempo):
     if pd.isna(tempo):
         return 0
