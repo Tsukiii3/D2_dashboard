@@ -97,14 +97,38 @@ st.markdown("""
 <h1 style="text-align:center;">TSUKII#5231</h1>
 """, unsafe_allow_html=True)
 
-total_horas = df_modos['Horas'].sum()
-total_kills = df_modos['Total_Kills'].sum()
-total_atividades = df_modos['Quantidade_feita'].sum()
+# ======== TRATAMENTO NUMÉRICO ========
+
+colunas_numericas = [
+    "Horas",
+    "Total_Kills",
+    "Quantidade_feita",
+    "Win_Rate",
+    "Média_Kills",
+    "Média_Mortes",
+    "Pontuação"
+]
+
+for col in colunas_numericas:
+    if col in df_modos.columns:
+        df_modos[col] = (
+            df_modos[col]
+            .astype(str)
+            .str.replace(",", ".", regex=False)
+        )
+        df_modos[col] = pd.to_numeric(
+            df_modos[col], errors="coerce"
+        ).fillna(0)
+
+# ======== MÉTRICAS ========
+
+total_horas = df_modos["Horas"].sum()
+total_kills = df_modos["Total_Kills"].sum()
+total_atividades = df_modos["Quantidade_feita"].sum()
 
 t1, t2, t3 = st.columns(3)
 
-df_modos["Horas_Jogadas"] = pd.to_numeric(df_modos["Horas_Jogadas"], errors="coerce")
-df_modos["Horas_Jogadas"] = df_modos["Horas_Jogadas"].fillna(0)
+t1.metric("Horas Jogadas", f"{total_horas:.1f}")
 t2.metric("Total Kills", f"{int(total_kills)}")
 t3.metric("Atividades", f"{int(total_atividades)}")
 
