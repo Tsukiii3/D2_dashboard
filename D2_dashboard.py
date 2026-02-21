@@ -103,7 +103,8 @@ total_atividades = df_modos['Quantidade_feita'].sum()
 
 t1, t2, t3 = st.columns(3)
 
-t1.metric("Horas Jogadas", f"{total_horas:.1f}")
+df_modos["Horas_Jogadas"] = pd.to_numeric(df_modos["Horas_Jogadas"], errors="coerce")
+df_modos["Horas_Jogadas"] = df_modos["Horas_Jogadas"].fillna(0)
 t2.metric("Total Kills", f"{int(total_kills)}")
 t3.metric("Atividades", f"{int(total_atividades)}")
 
