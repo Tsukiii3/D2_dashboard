@@ -56,24 +56,20 @@ def carregar_dados():
         st.secrets["gcp_service_account"],
         scopes=scope,
     )
-
     client = gspread.authorize(creds)
-
     spreadsheet = client.open_by_key(
         "1pkDTOC38D5rFlBbCBAAAOC3qEMVa6y-8hsy_KH_A2x0"
     )
+    def aba_para_df(gid):
+        worksheet = spreadsheet.get_worksheet_by_id(gid)
+        data = worksheet.get_all_values()
+        if not data:
+            return pd.DataFrame()
+        return pd.DataFrame(data[1:], columns=data[0])
+    df_modos = aba_para_df(1922820478)
+    df_raids = aba_para_df(1252752604)
+    df_masmorras = aba_para_df(1143212602)
 
-    df_modos = pd.DataFrame(
-        spreadsheet.get_worksheet_by_id(1922820478).get_all_records()
-    )
-
-    df_raids = pd.DataFrame(
-        spreadsheet.get_worksheet_by_id(1252752604).get_all_records()
-    )
-
-    df_masmorras = pd.DataFrame(
-        spreadsheet.get_worksheet_by_id(1143212602).get_all_records()
-    )
     return df_modos, df_raids, df_masmorras
 
 df_modos, df_raids, df_masmorras = carregar_dados()
