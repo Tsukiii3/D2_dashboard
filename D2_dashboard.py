@@ -75,15 +75,28 @@ def carregar_dados():
 df_modos, df_raids, df_masmorras = carregar_dados()
 
 def limpar_colunas(df):
-
     df.columns = df.columns.str.strip()
     df = df.loc[:, ~df.columns.duplicated()]
-
     return df
 
 df_modos = limpar_colunas(df_modos)
 df_raids = limpar_colunas(df_raids)
 df_masmorras = limpar_colunas(df_masmorras)
+
+# ======== CONVERTER COLUNAS NUMÉRICAS RAIDS E MASMORRAS ========
+colunas_numericas_raids = [
+    "Conclusões",
+    "Sherpas"
+]
+for df in [df_raids, df_masmorras]:
+    for col in colunas_numericas_raids:
+        if col in df.columns:
+            df[col] = (
+                df[col]
+                .astype(str)
+                .str.replace(",", ".", regex=False)
+            )
+            df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
 
 def tempo_para_segundos(tempo):
     if pd.isna(tempo):
