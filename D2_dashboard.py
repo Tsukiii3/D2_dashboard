@@ -4,6 +4,7 @@ import plotly.express as px
 import re
 import gspread
 from google.oauth2.service_account import Credentials
+from gspread import spreadsheet
 
 # ================= CONFIG =================
 st.set_page_config(
@@ -73,9 +74,15 @@ def carregar_dados():
     df_masmorras = pd.DataFrame(
         spreadsheet.get_worksheet_by_id(1143212602).get_all_records()
     )
-
     return df_modos, df_raids, df_masmorras
+
 df_modos, df_raids, df_masmorras = carregar_dados()
+
+worksheet = spreadsheet.get_worksheet_by_id(1922820478)
+data = worksheet.get_all_values()
+
+df = pd.DataFrame(data[1:], columns=data[0])
+
 def tempo_para_segundos(tempo):
     if pd.isna(tempo):
         return 0
