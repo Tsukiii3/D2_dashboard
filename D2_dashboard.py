@@ -74,10 +74,6 @@ def carregar_dados():
 
 df_modos, df_raids, df_masmorras = carregar_dados()
 
-worksheet = spreadsheet.get_worksheet_by_id(1922820478)
-data = worksheet.get_all_values()
-df = pd.DataFrame(data[1:], columns=data[0])
-
 def tempo_para_segundos(tempo):
     if pd.isna(tempo):
         return 0
