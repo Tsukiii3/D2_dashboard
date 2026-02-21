@@ -74,6 +74,17 @@ def carregar_dados():
 
 df_modos, df_raids, df_masmorras = carregar_dados()
 
+def limpar_colunas(df):
+
+    df.columns = df.columns.str.strip()
+    df = df.loc[:, ~df.columns.duplicated()]
+
+    return df
+
+df_modos = limpar_colunas(df_modos)
+df_raids = limpar_colunas(df_raids)
+df_masmorras = limpar_colunas(df_masmorras)
+
 def tempo_para_segundos(tempo):
     if pd.isna(tempo):
         return 0
