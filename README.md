@@ -32,5 +32,6 @@ streamlit run D2_dashboard.py
 Objetivo
 Este projeto foi criado com foco em aprendizado prático, análise de dados e construção de portfólio na área de programação e data analytics.
 
+
 Autor
 Desenvolvido por Tsukiii3
